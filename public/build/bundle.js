@@ -1,5 +1,5 @@
 
-(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35730/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
+(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
@@ -349,7 +349,7 @@ var app = (function () {
     	let input2_checked_value;
     	let t4;
     	let t5;
-    	let pre;
+    	let table;
     	let mounted;
     	let dispose;
 
@@ -367,26 +367,26 @@ var app = (function () {
     			input2 = element("input");
     			t4 = text(" Traits");
     			t5 = space();
-    			pre = element("pre");
+    			table = element("table");
     			input0.checked = input0_checked_value = /*type*/ ctx[1] === "Champions";
     			attr_dev(input0, "type", "radio");
     			attr_dev(input0, "name", "amount");
     			input0.value = "champions";
-    			add_location(input0, file, 43, 3, 750);
-    			add_location(label0, file, 42, 2, 739);
+    			add_location(input0, file, 84, 3, 1897);
+    			add_location(label0, file, 83, 2, 1886);
     			input1.checked = input1_checked_value = /*type*/ ctx[1] === "Items";
     			attr_dev(input1, "type", "radio");
     			attr_dev(input1, "name", "amount");
     			input1.value = "items";
-    			add_location(input1, file, 46, 3, 889);
-    			add_location(label1, file, 45, 2, 878);
+    			add_location(input1, file, 87, 3, 2036);
+    			add_location(label1, file, 86, 2, 2025);
     			input2.checked = input2_checked_value = /*type*/ ctx[1] === "Traits";
     			attr_dev(input2, "type", "radio");
     			attr_dev(input2, "name", "amount");
     			input2.value = "traits";
-    			add_location(input2, file, 49, 3, 1016);
-    			add_location(label2, file, 48, 2, 1005);
-    			add_location(pre, file, 54, 2, 1144);
+    			add_location(input2, file, 90, 3, 2163);
+    			add_location(label2, file, 89, 2, 2152);
+    			add_location(table, file, 95, 2, 2291);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -404,8 +404,8 @@ var app = (function () {
     			append_dev(label2, input2);
     			append_dev(label2, t4);
     			insert_dev(target, t5, anchor);
-    			insert_dev(target, pre, anchor);
-    			/*pre_binding*/ ctx[3](pre);
+    			insert_dev(target, table, anchor);
+    			/*table_binding*/ ctx[3](table);
 
     			if (!mounted) {
     				dispose = [
@@ -439,8 +439,8 @@ var app = (function () {
     			if (detaching) detach_dev(t3);
     			if (detaching) detach_dev(label2);
     			if (detaching) detach_dev(t5);
-    			if (detaching) detach_dev(pre);
-    			/*pre_binding*/ ctx[3](null);
+    			if (detaching) detach_dev(table);
+    			/*table_binding*/ ctx[3](null);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -466,13 +466,9 @@ var app = (function () {
     	let type = "";
 
     	const loadCards = async current_selection => {
-    		let string_selector = String(current_selection);
-    		console.log(string_selector);
 
     		try {
     			const res = await fetch(`/build/${String(current_selection)}.json`);
-    			console.log(type);
-    			console.log(res);
     			hpCards = await res.json();
     			return displayCards(hpCards);
     		} catch(err) {
@@ -481,13 +477,55 @@ var app = (function () {
     	};
 
     	const displayCards = Cards => {
-    		let htmlString = JSON.stringify(Cards, undefined, 2);
-    		$$invalidate(0, me.innerHTML = htmlString, me);
+    		let htmlString = buildHtmlTable(Cards); //JSON.stringify(Cards, undefined, 2);
+    		$$invalidate(0, me.innerHTML = htmlString.innerHTML, me);
     	};
 
     	function onChange(event) {
     		$$invalidate(1, type = loadCards(event.currentTarget.value));
     	}
+
+    	// Create a table out of the JSON object
+    	const buildHtmlTable = arr => {
+    		let table = document.createElement("table"),
+    			columns = addAllColumnHeaders(arr, table);
+
+    		for (let i = 0, maxi = arr.length; i < maxi; ++i) {
+    			let tr = document.createElement("tr");
+
+    			for (let j = 0, maxj = columns.length; j < maxj; ++j) {
+    				let td = document.createElement("td");
+    				let cellValue = arr[i][columns[j]];
+    				td.appendChild(document.createTextNode(arr[i][columns[j]] || ""));
+    				tr.appendChild(td);
+    			}
+
+    			table.appendChild(tr);
+    		}
+
+    		return table;
+    	};
+
+    	// Adds a header row to the table and returns the set of columns.
+    	// Need to do union of keys from all records as some records may not contain
+    	// all records
+    	const addAllColumnHeaders = (arr, table) => {
+    		let columnSet = [], tr = document.createElement("tr");
+
+    		for (let i = 0, l = arr.length; i < l; i++) {
+    			for (let key in arr[i]) {
+    				if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key) === -1) {
+    					columnSet.push(key);
+    					let th = document.createElement("th");
+    					th.appendChild(document.createTextNode(key));
+    					tr.appendChild(th);
+    				}
+    			}
+    		}
+
+    		table.appendChild(tr);
+    		return columnSet;
+    	};
 
     	const writable_props = [];
 
@@ -495,7 +533,7 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	function pre_binding($$value) {
+    	function table_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
     			me = $$value;
     			$$invalidate(0, me);
@@ -509,7 +547,9 @@ var app = (function () {
     		type,
     		loadCards,
     		displayCards,
-    		onChange
+    		onChange,
+    		buildHtmlTable,
+    		addAllColumnHeaders
     	});
 
     	$$self.$inject_state = $$props => {
@@ -523,7 +563,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [me, type, onChange, pre_binding];
+    	return [me, type, onChange, table_binding];
     }
 
     class App extends SvelteComponentDev {
